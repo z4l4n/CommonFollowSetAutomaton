@@ -376,12 +376,9 @@ public class PCRE {
 					calculateFollow(firstChild, rootRegexPositions, followMap, position, letter);
 					HashMap<Tree, Integer> secondChildFirstMap = getFirstMap(secondChild);
 					
-					
 					for (Tree i : secondChildFirstMap.keySet()) {
 						followMap.put(i, rootRegexPositions.get(i));
 					}
-
-
 				} else {	
 					calculateFollow(secondChild, rootRegexPositions, followMap, position, letter);
 				}
@@ -409,9 +406,27 @@ public class PCRE {
 			break;
 		}
 	}
+	public static HashMap<Tree, Integer> getFollowMap(Tree regexTree, Tree letter) {
+		Integer position = null;
+		HashMap<Tree, Integer> positionMap = getPositionMap(regexTree);
+		//System.out.println("position map(followon belül):" + positionMap);
+		HashMap<Tree, Integer> followMap = new HashMap<Tree, Integer>();
+		for (Map.Entry<Tree, Integer> e : positionMap.entrySet()) {
+			if (e.getKey() == letter) {
+				position = e.getValue();
+			}
+		}
+		if (position == null) {
+			System.out.println("Position does not exist!");
+			return followMap;
+		}
+		calculateFollow(regexTree, positionMap, followMap,  position, letter);
+		return followMap;
+	}
 	public static HashMap<Tree, Integer> getFollowMap(Tree regexTree, Integer position) {
 		Tree letter = null;
 		HashMap<Tree, Integer> positionMap = getPositionMap(regexTree);
+		//System.out.println("position map(followon belül):" + positionMap);
 		HashMap<Tree, Integer> followMap = new HashMap<Tree, Integer>();
 		for (Map.Entry<Tree, Integer> e : positionMap.entrySet()) {
 			if (e.getValue() == position) {
@@ -595,11 +610,12 @@ public class PCRE {
 				Tree t1 = s.removeFirst();
 				int t1Size = getPositionMap(t1).size();
 				if ((subExprSize / 3.0) <= t1Size && t1Size <= (subExprSize * 2 / 3.0)) {
-					//System.out.println("t1 with size" + t1Size + ","+": " + t1.toStringTree());
+					System.out.println(" ");
+					System.out.println("t1: " + t1.toStringTree());
 					int t1Index = t1.getChildIndex();
 					Tree t1Parent = t1.getParent();
 					t1Parent.deleteChild(t1Index);
-					//System.out.println("t2: " + subExpr.toStringTree());
+					System.out.println("t2: " + subExpr.toStringTree());
 					HashMap<Integer, HashSet<HashMap<Tree, Integer>>> t1Dec = algorithm1(rootPositions, t1);
 					//System.out.println("t1Dec: " + t1Dec);
 					HashMap<Integer, HashSet<HashMap<Tree, Integer>>> t2Dec = algorithm1(rootPositions, subExpr);
@@ -608,7 +624,11 @@ public class PCRE {
 					HashMap<Tree, Integer> t2Positions = getSubTreePositionMap(rootPositions, getPositionMap(subExpr));
 					((BaseTree) t1Parent).insertChild(t1Index, t1);
 					//System.out.println("visszarakás után: " + subExpr.toStringTree());
-					for (Integer position : subExprPositions.values() ) {
+					int position;
+					Tree letter;
+					for (Entry<Tree, Integer> entry : subExprPositions.entrySet() ) {
+						position = entry.getValue();
+						letter = entry.getKey();
 						if (t1Positions.containsValue(position)) {
 							
 							HashMap<Tree, Integer> t1Last = getSubTreePositionMap(rootPositions, getLastMap(t1));
@@ -641,14 +661,15 @@ public class PCRE {
 							}
 						} else {
 							if (!t2Positions.containsValue(position)) {
-								//System.out.println("bug!");
+								System.out.println("bug!");
 							}
 							HashMap<Tree, Integer> t1First = getSubTreePositionMap(rootPositions, getFirstMap(t1));
+							System.out.println("t1first: " + t1First);
+							System.out.println("follow(E," + position +"):" + getSubTreePositionMap(rootPositions, getFollowMap(subExpr, letter)));
 							HashSet<HashMap<Tree, Integer>> temp = t2Dec.get(position);
 							//System.out.println("t2dec: " + temp);
-							if (containsAll(getSubTreePositionMap(rootPositions, followTree(subExpr, position)), t1First)) {
-								//System.out.println("tartalmazza!");
-								//System.out.println("t1 first: " + t1First);
+							if (containsAll(getSubTreePositionMap(rootPositions, getFollowMap(subExpr, letter)), t1First)) {
+								
 								HashMap<Tree, Integer> C2 = getPositionIntersectionMap(subExprPositions, t1First);
 								//System.out.println(C2);
 								temp.add(C2);
@@ -928,21 +949,22 @@ public class PCRE {
 
 		PCRE pcre2 = new PCRE("b(c|d)*");
 		Tree t = getAppropriateTree(pcre2.getCommonTree());
-		System.out.println("follow d :" + getFollowMap(t, 2));
-		System.out.println(algorithm1(getPositionMap(t), t));
-		CFS c = new CFS(t);
 		
+		System.out.println("alga 1: " + algorithm1(getPositionMap(t), t));
+		CFS c = new CFS(t);
+		System.out.println("hehooo");
+		System.out.println(c.matches("bdc") ? "matches!" : "doesnt match!");
 		System.out.println(t.toStringTree());
 		/*System.out.println("Kezdő: " + c.getInitialState());
 		for (State s : c.getStates()) {
 			System.out.println("State: " + s + "kiélek: " + s.getEdges());
 		}
-		System.out.println(c.matches("bdc") ? "matches!" : "doesnt match!");*/
+		
 		//CommonTree t;
 		//System.out.println(pcre2.getCommonTree().getChild(1).getChild(0).getType());
 		//Tree t = getAppropriateTree(pcre2.getCommonTree());
 		//System.out.println(t);
-		//PCRELexer.
+		//PCRELexer.*/
 	}
 }
 //                           (ELEMENT c (QUANTIFIER 0 2147483647 GREEDY))
