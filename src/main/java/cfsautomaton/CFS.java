@@ -1,7 +1,6 @@
-package automaton;
+package cfsautomaton;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
@@ -9,7 +8,7 @@ import org.antlr.runtime.tree.Tree;
 import pcreparser.PCRE;
 // Common Follow Set Automaton
 public class CFS {
-	private Tree regex;
+	
 	//private HashMap<>
 	private HashSet<State> states;
 	private State initialState;
@@ -20,7 +19,6 @@ public class CFS {
 	
 	
 	public CFS(Tree t) {
-		this.regex = t;
 		this.last = PCRE.getLastMap(t);
 		this.decomposition = PCRE.algorithm1(PCRE.getPositionMap(t), t);
 		this.first = PCRE.getFirstMap(t);
@@ -37,6 +35,9 @@ public class CFS {
 			for (Entry<Tree, Integer> e : from.getPositions().entrySet()) {
 				tempSet = decomposition.get(e.getValue());
 				for (HashMap<Tree, Integer> i : tempSet) {
+					if (i.isEmpty() && !last.containsKey(e.getKey())) {
+						continue;
+					}
 					to = new State(i, last.containsValue(e.getValue()));
 					if (states.contains(to)) {
 						for (State j : states) {

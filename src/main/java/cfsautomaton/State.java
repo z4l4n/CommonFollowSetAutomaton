@@ -1,4 +1,4 @@
-package automaton;
+package cfsautomaton;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +14,6 @@ public class State {
 	private HashMap<Tree, Integer> positions;
 	private boolean isFinal;
 	private HashMap<Character, HashSet<State>> edges;
-	//Why string? character??
 	
 	public State(HashMap<Tree, Integer> positions, boolean isFinal) {
 		super();

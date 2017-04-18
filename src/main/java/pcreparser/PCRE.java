@@ -11,10 +11,7 @@ import org.antlr.runtime.tree.DOTTreeGenerator;
 import org.antlr.runtime.tree.Tree;
 import org.antlr.stringtemplate.StringTemplate;
 
-import antlr.Token;
-import automaton.CFS;
-import automaton.State;
-
+import cfsautomaton.CFS;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -183,11 +180,7 @@ public class PCRE {
 			}
 			return true;
 
-
-			/*case PCRELexer.CAPTURING_GROUP:
-			return canBeEmptyString(t.getChild(0));*/
-
-		case PCRELexer.ELEMENT: // JÓ EZ ÍGY?
+		case PCRELexer.ELEMENT:
 			if (t.getChildCount() > 1) {
 				if (t.getChild(1).getChild(0).toString().equals("0")) {
 					return true;
@@ -214,16 +207,10 @@ public class PCRE {
 		case PCRELexer.ALTERNATIVE:
 			if (t.getChildCount() > 0) {
 				if (t.getChildCount() > 1 && canBeEmptyString(t.getChild(1))) { //legalabb 2 hosszu alternative, es az utolso lehet ures - > utolso elotti is jatszik
-					//tempTree = (Tree) t.deleteChild(t.getChildCount() - 1);
 					calculateLast(t.getChild(0), positionMap, lastMap);
 					calculateLast(t.getChild(1), positionMap, lastMap);
 					t.addChild(tempTree);
-				}/* else if (t.getChildCount() > 1 && t.getChild(t.getChildCount() - 1).getChild(0).getType() == PCRELexer.EndOfSubjectOrLine) {
-					tempTree = (Tree) t.deleteChild(t.getChildCount() - 1);
-//					calculateLast(t, positionMap, lastMap);
-					t.addChild(tempTree);
-
-				}*/else {
+				} else {
 					calculateLast(t.getChild(1), positionMap, lastMap);
 				}
 			}
@@ -267,18 +254,14 @@ public class PCRE {
 			break;
 
 		case PCRELexer.ALTERNATIVE:
-		//	Tree tempTree = null; 
+		
 			if (t.getChildCount() > 0) {
 				if (t.getChildCount() > 1 && canBeEmptyString(t.getChild(0))) {
-					//tempTree = (Tree) t.deleteChild(0);
+				
 					calculateFirst(t.getChild(0), positionMap, firstMap);
 					calculateFirst(t.getChild(1), positionMap, firstMap); 
-					//((BaseTree) t).insertChild(0, tempTree); 
-				} /*else  if (t.getChildCount() > 1 && t.getChild(0).getChild(0).getType() == PCRELexer.START_OF_SUBJECT){
-					tempTree = (Tree) t.deleteChild(0);
-					calculateFirst(t, positionMap, firstMap);
-					((BaseTree) t).insertChild(0, tempTree);
-				}*/else {
+					
+				} else {
 					calculateFirst(t.getChild(0), positionMap, firstMap);
 				}
 			}
@@ -441,9 +424,6 @@ public class PCRE {
 		return followMap;
 	}
 	
-	// VIGYÁZAT!!
-		// Visszaadhat literált önmagában, pl. ekkor: (ELEMENT a (QUANTIFIER 0 2147483647 GREEDY))
-		// de (ELEMENT a)-ként is, pl. ekkor: (ALTERNATIVE (ELEMENT b) (ELEMENT a)).
 		public static Tree next(Tree t) {
 			if (t.getParent() != null) {
 				Tree father = t.getParent();
@@ -460,7 +440,6 @@ public class PCRE {
 		}	
 	
 	// Lemma 5.1(a) szerinti follow
-	// úgy tűnik, kész
 	public static HashMap<Tree, Integer> followTree(Tree t, Integer position) {
 		HashMap<Tree, Integer> result = new HashMap<Tree, Integer>(); 
 		HashMap<Tree, Integer> positions = getPositionMap(t);
@@ -534,7 +513,6 @@ public class PCRE {
 	}
 
 	// 1 méretű fára decomposition
-	// ezt csinálni!
 	public static HashSet<HashMap<Tree, Integer>> dec1(HashMap<Tree, Integer> rootPositions, Integer position, Tree subExpr) {
 		HashMap<Tree, Integer> subPositions = getSubTreePositionMap(rootPositions, getPositionMap(subExpr));
 		if (!subPositions.containsValue(position)) {
@@ -575,7 +553,6 @@ public class PCRE {
 	// pl: ős == 'abc', pozíciók: a-0, b-1, c-2
 	//     leszármazott == bc, pozíciók: b-0, c-1
 	// így last(bc) == c-2 lesz c-1 helyett
-	//DONE
 	public static HashMap<Tree, Integer> getSubTreePositionMap(HashMap<Tree, Integer> rootPositions, HashMap<Tree, Integer> subExprPositions) {
 		HashMap<Tree, Integer> resultMap = new HashMap<Tree, Integer>();
 		
@@ -592,16 +569,14 @@ public class PCRE {
 		HashMap<Tree, Integer> subExprPositions = getSubTreePositionMap(rootPositions, getPositionMap(subExpr));
 		int subExprSize = subExprPositions.size();
 		if (subExprSize == 1) {
-			//System.out.println("size:1");
 			int position = -1;
 			for (Entry<Tree, Integer> e : subExprPositions.entrySet()) {
 				position = e.getValue();
 			}
-			//System.out.println("1 méretű fa: " + subExpr.toStringTree());
 			resultMap.put(position, dec1(rootPositions, position, subExpr));
-			//System.out.println("dec-e az 1 méretűnek: " + dec1(rootPositions, position, subExpr));
 			return resultMap;
 		}
+		
 		if (subExprSize > 1) {
 			//System.out.println("size > 1");
 			LinkedList<Tree> s = new LinkedList<Tree>();
@@ -610,16 +585,11 @@ public class PCRE {
 				Tree t1 = s.removeFirst();
 				int t1Size = getPositionMap(t1).size();
 				if ((subExprSize / 3.0) <= t1Size && t1Size <= (subExprSize * 2 / 3.0)) {
-					System.out.println(" ");
-					System.out.println("t1: " + t1.toStringTree());
 					int t1Index = t1.getChildIndex();
 					Tree t1Parent = t1.getParent();
 					t1Parent.deleteChild(t1Index);
-					System.out.println("t2: " + subExpr.toStringTree());
 					HashMap<Integer, HashSet<HashMap<Tree, Integer>>> t1Dec = algorithm1(rootPositions, t1);
-					//System.out.println("t1Dec: " + t1Dec);
 					HashMap<Integer, HashSet<HashMap<Tree, Integer>>> t2Dec = algorithm1(rootPositions, subExpr);
-					//System.out.println("t2Dec: " + t2Dec);
 					HashMap<Tree, Integer> t1Positions = getSubTreePositionMap(rootPositions, getPositionMap(t1));
 					HashMap<Tree, Integer> t2Positions = getSubTreePositionMap(rootPositions, getPositionMap(subExpr));
 					((BaseTree) t1Parent).insertChild(t1Index, t1);
@@ -630,27 +600,16 @@ public class PCRE {
 						position = entry.getValue();
 						letter = entry.getKey();
 						if (t1Positions.containsValue(position)) {
-							
 							HashMap<Tree, Integer> t1Last = getSubTreePositionMap(rootPositions, getLastMap(t1));
-							//System.out.println("t1 last:" + t1Last);
 							if (!t1Last.containsValue(position)) {
-								
 								resultMap.put(position, t1Dec.get(position));
 							} else {
-								//System.out.println("C1-es matyizás..");
 								HashMap<Tree, Integer> C1 = new HashMap<Tree, Integer>();
 								Tree g = t1;
-								
-								// F == subExpr???
 								while (g != subExpr) {
 									HashMap<Tree, Integer> gLastMap = getSubTreePositionMap(rootPositions, getLastMap(g));
 									HashMap<Tree, Integer> interSect = getPositionIntersectionMap(gLastMap, t1Positions);
-								//	System.out.println("intersect" + interSect);
 									if (areEquals(interSect, t1Last)) {
-										/*System.out.println("equals!");
-										System.out.println("G:" + g.toStringTree());
-										System.out.println("g.parent " + g.getParent().toStringTree());
-										System.out.println("first(next(g)) " + getFirstMap(next(g)));*/
 										C1.putAll(getPositionIntersectionMap(subExprPositions, getSubTreePositionMap(rootPositions, getFirstMap(next(g)))));
 									}
 									g = g.getParent();
@@ -664,24 +623,16 @@ public class PCRE {
 								System.out.println("bug!");
 							}
 							HashMap<Tree, Integer> t1First = getSubTreePositionMap(rootPositions, getFirstMap(t1));
-							System.out.println("t1first: " + t1First);
-							System.out.println("follow(E," + position +"):" + getSubTreePositionMap(rootPositions, getFollowMap(subExpr, letter)));
 							HashSet<HashMap<Tree, Integer>> temp = t2Dec.get(position);
-							//System.out.println("t2dec: " + temp);
 							if (containsAll(getSubTreePositionMap(rootPositions, getFollowMap(subExpr, letter)), t1First)) {
-								
 								HashMap<Tree, Integer> C2 = getPositionIntersectionMap(subExprPositions, t1First);
 								//System.out.println(C2);
 								temp.add(C2);
 							}
 							resultMap.put(position, temp);
-							
-							
 						}
-						
 					}
 					return resultMap;
-					//break;
 				}
 				for (int i = 0; i < t1.getChildCount(); i++) {
 					s.add(t1.getChild(i));
@@ -693,7 +644,9 @@ public class PCRE {
 	}
 	
 	
-	//					Megfelelő(bináris, zárójelmentes stb.) regex tree készítő függvények
+	
+	//					MEGFELELO REGEX TREE KESZITO FUGGVENYEK
+	
 	public static void deleteUnnecessaryElements(Tree t) {
 		if (t.getType() == PCRELexer.ELEMENT && t.getChildCount() == 1 ) {
 				t.getParent().setChild(t.getChildIndex(), t.getChild(0));
@@ -703,104 +656,13 @@ public class PCRE {
 			deleteUnnecessaryElements(t.getChild(i));
 		}
 	}
+	
 	public static Tree getUnnecessaryElementFreeTree(Tree t) {
 		if(t.getType() == PCRELexer.ELEMENT && t.getChildCount() == 1) {
 			t = t.getChild(0);
 		}
 		deleteUnnecessaryElements(t);
 		return t;
-	}
-	public static CommonTree generateDotStarElement() {
-		CommonTree tElem = new CommonTree(new CommonToken(PCRELexer.ELEMENT, "ELEMENT"));
-		CommonTree tAny = new CommonTree(new CommonToken(PCRELexer.ANY, "ANY"));
-		CommonTree tQuantifier = new CommonTree(new CommonToken(PCRELexer.QUANTIFIER, "QUANTIFIER"));
-		CommonTree tZero = new CommonTree(new CommonToken(PCRELexer.NUMBER, "0"));
-		CommonTree tMax = new CommonTree(new CommonToken(PCRELexer.NUMBER, "2147483647"));
-		CommonTree tGreedy = new CommonTree(new CommonToken(PCRELexer.GREEDY, "GREEDY"));
-		tElem.addChild(tAny);
-		tElem.addChild(tQuantifier);
-		tQuantifier.addChild(tZero);
-		tQuantifier.addChild(tMax);
-		tQuantifier.addChild(tGreedy);
-		return tElem;
-	}
-
-	// converToBinary törli az egy gyerekes ALTERNATIVE-okat, ezért ezt előtte kell futtatni! (mert 2 gyerekes lehet ezután, és akkor nem kell törölni az ALTERNATIVE-ot)
-	public static void addStartOfSubject(Tree t) {
-		switch(t.getType()) {
-		case PCRELexer.OR:
-			for (int i = 0; i < t.getChildCount(); i++) {
-				addStartOfSubject(t.getChild(i));
-			}
-			break;
-
-		case PCRELexer.ALTERNATIVE:
-			if (t.getChildCount() > 0) {
-				if (t.getChild(0).getChild(0).getType() != PCRELexer.START_OF_SUBJECT) {
-					/*if (t.getChild(0).getChild(0).getType() == PCRELexer.CAPTURING_GROUP) {
-						addStartOfSubject(t.getChild(0).getChild(0).getChild(0));
-			} else*/ 
-					for (int i = 0; i < t.getChildCount(); i++) { // ha az első n fiú lehet üres szó, akkor töröljük őket, és utána szúrjuk az elejére a ".*"-ot (mert pl.: ".*f*as" == ".*as")
-						if (canBeEmptyString(t.getChild(i))) {
-							t.deleteChild(i);
-						} else {
-							break;
-						}
-					}
-					((BaseTree) t).insertChild(0, generateDotStarElement());	
-				} else {
-					t.deleteChild(0); // töröljük a "^" jelet
-				}
-			}		
-			break;
-		}
-	}
-
-	//DONE
-	public static void addEndOfSubject(Tree t) {
-		switch (t.getType()) {
-		case PCRELexer.OR:
-			for (int i = 0; i < t.getChildCount(); i++) {
-				addEndOfSubject(t.getChild(i));
-			}
-			break;
-
-		case PCRELexer.ALTERNATIVE:
-			if (t.getChildCount() > 0) {
-				if (t.getChild(t.getChildCount() - 1).getChild(0).getType() != PCRELexer.EndOfSubjectOrLine) {//Ha "."-al végződik, kicseréljük .*-al, ha nem, mögé szúrjuk
-
-					for (int i = t.getChildCount() - 1; i >= 0; i--) {
-						if (canBeEmptyString(t.getChild(i))) {
-							t.deleteChild(i);
-						} else {
-							break;
-						}
-					}
-
-					t.addChild(generateDotStarElement());
-
-				} else {
-					t.deleteChild(t.getChildCount() - 1);
-				}
-			}		
-			break;
-		}
-	}
-
-	//DONE
-	public static void addStartAndEndOfSubject(Tree t) {
-		switch (t.getType()) {
-		case PCRELexer.OR:
-			for (int i = 0; i < t.getChildCount(); i++) {
-				addStartAndEndOfSubject(t.getChild(i));
-			}
-			break;
-
-		case PCRELexer.ALTERNATIVE:
-			addStartOfSubject(t);
-			addEndOfSubject(t);
-			break;
-		}
 	}
 	
 	// BINARY FORM elott kell, mert (esetleg unáris) ALT nagyapára számít a függv.
@@ -838,6 +700,7 @@ public class PCRE {
 		removeUnaryConcats(t);
 		return t;
 	}
+	
 	public static void removeUnaryConcats(Tree t) {
 		switch (t.getType()) {
 		case PCRELexer.ALTERNATIVE:
@@ -936,7 +799,98 @@ public class PCRE {
 		return t;
 	}
 	
-	//				Megfelelő(bináris, zárójelmentes stb.) regex tree készítő függvények VÉGE
+	
+	    // FELESLEGESEK	
+		public static CommonTree generateDotStarElement() {
+			CommonTree tElem = new CommonTree(new CommonToken(PCRELexer.ELEMENT, "ELEMENT"));
+			CommonTree tAny = new CommonTree(new CommonToken(PCRELexer.ANY, "ANY"));
+			CommonTree tQuantifier = new CommonTree(new CommonToken(PCRELexer.QUANTIFIER, "QUANTIFIER"));
+			CommonTree tZero = new CommonTree(new CommonToken(PCRELexer.NUMBER, "0"));
+			CommonTree tMax = new CommonTree(new CommonToken(PCRELexer.NUMBER, "2147483647"));
+			CommonTree tGreedy = new CommonTree(new CommonToken(PCRELexer.GREEDY, "GREEDY"));
+			tElem.addChild(tAny);
+			tElem.addChild(tQuantifier);
+			tQuantifier.addChild(tZero);
+			tQuantifier.addChild(tMax);
+			tQuantifier.addChild(tGreedy);
+			return tElem;
+		}
+
+		// converToBinary törli az egy gyerekes ALTERNATIVE-okat, ezért ezt előtte kell futtatni! (mert 2 gyerekes lehet ezután, és akkor nem kell törölni az ALTERNATIVE-ot)
+		public static void addStartOfSubject(Tree t) {
+			switch(t.getType()) {
+			case PCRELexer.OR:
+				for (int i = 0; i < t.getChildCount(); i++) {
+					addStartOfSubject(t.getChild(i));
+				}
+				break;
+
+			case PCRELexer.ALTERNATIVE:
+				if (t.getChildCount() > 0) {
+					if (t.getChild(0).getChild(0).getType() != PCRELexer.START_OF_SUBJECT) {
+						for (int i = 0; i < t.getChildCount(); i++) { // ha az első n fiú lehet üres szó, akkor töröljük őket, és utána szúrjuk az elejére a ".*"-ot (mert pl.: ".*f*as" == ".*as")
+							if (canBeEmptyString(t.getChild(i))) {
+								t.deleteChild(i);
+							} else {
+								break;
+							}
+						}
+						((BaseTree) t).insertChild(0, generateDotStarElement());	
+					} else {
+						t.deleteChild(0); // töröljük a "^" jelet
+					}
+				}		
+				break;
+			}
+		}
+
+		public static void addEndOfSubject(Tree t) {
+			switch (t.getType()) {
+			case PCRELexer.OR:
+				for (int i = 0; i < t.getChildCount(); i++) {
+					addEndOfSubject(t.getChild(i));
+				}
+				break;
+
+			case PCRELexer.ALTERNATIVE:
+				if (t.getChildCount() > 0) {
+					if (t.getChild(t.getChildCount() - 1).getChild(0).getType() != PCRELexer.EndOfSubjectOrLine) {//Ha "."-al végződik, kicseréljük .*-al, ha nem, mögé szúrjuk
+
+						for (int i = t.getChildCount() - 1; i >= 0; i--) {
+							if (canBeEmptyString(t.getChild(i))) {
+								t.deleteChild(i);
+							} else {
+								break;
+							}
+						}
+
+						t.addChild(generateDotStarElement());
+
+					} else {
+						t.deleteChild(t.getChildCount() - 1);
+					}
+				}		
+				break;
+			}
+		}
+
+		public static void addStartAndEndOfSubject(Tree t) {
+			switch (t.getType()) {
+			case PCRELexer.OR:
+				for (int i = 0; i < t.getChildCount(); i++) {
+					addStartAndEndOfSubject(t.getChild(i));
+				}
+				break;
+
+			case PCRELexer.ALTERNATIVE:
+				addStartOfSubject(t);
+				addEndOfSubject(t);
+				break;
+			}
+		}
+		// FELESLEGESEK VEGE
+		
+	//				MEGFELELO REGEX TREE KESZITO FUGGVENYEK VEGE
 	
 	
 	
@@ -947,28 +901,9 @@ public class PCRE {
 		 * "usage: java -jar PCRE.jar 'regex-pattern'"); System.exit(42); }
 		 */
 
-		PCRE pcre2 = new PCRE("b(c|d)*");
+		PCRE pcre2 = new PCRE("(a|b)((cd)*|d)*");
 		Tree t = getAppropriateTree(pcre2.getCommonTree());
-		
-		System.out.println("alga 1: " + algorithm1(getPositionMap(t), t));
 		CFS c = new CFS(t);
-		System.out.println("hehooo");
-		System.out.println(c.matches("bdc") ? "matches!" : "doesnt match!");
-		System.out.println(t.toStringTree());
-		/*System.out.println("Kezdő: " + c.getInitialState());
-		for (State s : c.getStates()) {
-			System.out.println("State: " + s + "kiélek: " + s.getEdges());
-		}
-		
-		//CommonTree t;
-		//System.out.println(pcre2.getCommonTree().getChild(1).getChild(0).getType());
-		//Tree t = getAppropriateTree(pcre2.getCommonTree());
-		//System.out.println(t);
-		//PCRELexer.*/
+		System.out.println(c.matches("bcddc") ? "matches!" : "doesnt match!");
 	}
 }
-//                           (ELEMENT c (QUANTIFIER 0 2147483647 GREEDY))
-// típusok:                   QUANTIFIER- QUANTIFIER,  0 - NUMBER, 2147483647 - NUMBER, GREEDY-GREEDY
-//
-
-//Tested: removeUnaryConats, getUnaryConcatFreeTree, first, last, follow, convertToBinaryTree, CanBeEmpty, positions
