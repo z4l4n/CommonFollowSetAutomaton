@@ -61,22 +61,17 @@ public class CFS {
 	public boolean matches(String s) {
 		HashSet<State> actualStates = new HashSet<State>();
 		HashSet<State> tempStateSet = new HashSet<State>();
-		HashSet<State> t;
 		actualStates.add(initialState);
 		
 		for (int i = 0; i < s.length(); i++) {
 			tempStateSet.clear();
-			t = null;
 			for (State state : actualStates) {
-				t = state.getNextStates(s.charAt(i));
-				if (t != null) {
-					tempStateSet.addAll(t);
-				}
-				
+				tempStateSet.addAll(state.getNextStates(s.charAt(i)));
 			}
 			actualStates.clear();
 			actualStates.addAll(tempStateSet);
 		}
+		
 		for (State state : actualStates) {
 			if (state.isFinal()) {
 				return true;

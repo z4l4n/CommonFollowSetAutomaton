@@ -12,6 +12,8 @@ import org.antlr.runtime.tree.Tree;
 import org.antlr.stringtemplate.StringTemplate;
 
 import cfsautomaton.CFS;
+import thomsonautomaton.ThomsonAutomaton;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -901,9 +903,10 @@ public class PCRE {
 		 * "usage: java -jar PCRE.jar 'regex-pattern'"); System.exit(42); }
 		 */
 
-		PCRE pcre2 = new PCRE("(a|b)((cd)*|d)*");
+		PCRE pcre2 = new PCRE("b(c|d)*");
 		Tree t = getAppropriateTree(pcre2.getCommonTree());
-		CFS c = new CFS(t);
-		System.out.println(c.matches("bcddc") ? "matches!" : "doesnt match!");
+		System.out.println(t.toStringTree());
+		ThomsonAutomaton c = new ThomsonAutomaton(t);
+		System.out.println(c.matches("bdcdcf") ? "matches!" : "doesnt match!");
 	}
 }

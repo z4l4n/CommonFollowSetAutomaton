@@ -33,8 +33,9 @@ public class State {
 		}
 	}
 	
-	public HashSet<State> getNextStates(Character character) {
-		return edges.get(character);
+	public HashSet<State> getNextStates(Character c) {
+		HashSet<State> s = edges.get(c);
+		return s == null ? new HashSet<State>() : s;
 	}
 	
 	public HashMap<Tree, Integer> getPositions() {
