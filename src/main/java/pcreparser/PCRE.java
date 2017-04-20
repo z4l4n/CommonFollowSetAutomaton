@@ -903,10 +903,10 @@ public class PCRE {
 		 * "usage: java -jar PCRE.jar 'regex-pattern'"); System.exit(42); }
 		 */
 
-		PCRE pcre2 = new PCRE("b(c|d)*");
+		PCRE pcre2 = new PCRE("(a|b)((cd)*|d)*");
 		Tree t = getAppropriateTree(pcre2.getCommonTree());
-		System.out.println(t.toStringTree());
+		//System.out.println(t.toStringTree());
 		ThomsonAutomaton c = new ThomsonAutomaton(t);
-		System.out.println(c.matches("bdcdcf") ? "matches!" : "doesnt match!");
+		System.out.println(c.matches("bcddc") ? "matches!" : "doesnt match!");
 	}
 }

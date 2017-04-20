@@ -53,6 +53,7 @@ public class ThomsonAutomaton {
 	
 	public HashSet<State> getEmptyTransitionClosure(State state) {
 		HashSet<State> result = new HashSet<State>(state.getNextStates());
+		result.add(state); // kiindulópont kell bele?
 		HashSet<State> temp = new HashSet<State>();
 		while (true) {
 			temp.clear();
@@ -66,7 +67,7 @@ public class ThomsonAutomaton {
 			}
 		}
 	}
-	//TODO empty transition bug
+
 	public boolean matches(String s) {
 		HashSet<State> actualStates = new HashSet<State>();
 		HashSet<State> tempStateSet = new HashSet<State>();
@@ -76,11 +77,11 @@ public class ThomsonAutomaton {
 			tempStateSet.clear();
 			for (State state : actualStates) {
 				tempStateSet.addAll(state.getNextStates(s.charAt(i)));
-				tempStateSet.addAll(getEmptyTransitionClosure(state));
-				
 			}
 			actualStates.clear();
-			actualStates.addAll(tempStateSet);
+			for (State state : tempStateSet) {
+				actualStates.addAll(getEmptyTransitionClosure(state));
+			}
 		}
 		for (State state : actualStates) {
 			if (state == finalState) {
