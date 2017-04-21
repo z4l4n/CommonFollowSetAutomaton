@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import org.antlr.runtime.tree.Tree;
 import pcreparser.PCRE;
+
 // Common Follow Set Automaton
 public class CFS {
 	
@@ -19,12 +20,12 @@ public class CFS {
 	
 	
 	public CFS(Tree t) {
-		this.last = PCRE.getLastMap(t);
-		this.decomposition = PCRE.algorithm1(PCRE.getPositionMap(t), t);
-		this.first = PCRE.getFirstMap(t);
-		this.initialState = new State(first, PCRE.canBeEmptyString(t));
+		last = PCRE.getLastMap(t);
+		decomposition = PCRE.algorithm1(PCRE.getPositionMap(t), t);
+		first = PCRE.getFirstMap(t);
+		initialState = new State(first, PCRE.canBeEmptyString(t));
 		states = new HashSet<State>();
-		this.states.add(initialState);
+		states.add(initialState);
 		
 		LinkedList<State> S = new LinkedList<State>();
 		S.add(initialState);
@@ -35,7 +36,7 @@ public class CFS {
 			for (Entry<Tree, Integer> e : from.getPositions().entrySet()) {
 				tempSet = decomposition.get(e.getValue());
 				for (HashMap<Tree, Integer> i : tempSet) {
-					if (i.isEmpty() && !last.containsKey(e.getKey())) {
+					if (i.isEmpty() && !last.containsKey(e.getKey())) { // pl.: dec(x) = {{}, {1, 2}, {3}} üres halmazát nem tesszük be
 						continue;
 					}
 					to = new State(i, last.containsValue(e.getValue()));
@@ -56,7 +57,33 @@ public class CFS {
 		}
 	}
 	
+	public int getStateCount() {
+		return states.size();
+	}
 	
+	public int getTransitionCount() {
+		int res = 0;
+		HashSet<State> S = new HashSet<State>(); //visited
+		HashSet<State> Q = new HashSet<State>(); //unvisited list
+		HashSet<State> temp = new HashSet<State>();
+		Q.add(initialState);
+		
+		while (!S.containsAll(Q)) {
+			temp.clear();
+			for (State p : Q) {
+				if (!S.contains(p)) {
+					for (Entry<Character, HashSet<State>> entry : p.getCharTransitions().entrySet()) {
+						res += entry.getValue().size();
+						temp.addAll(entry.getValue());
+					}
+					S.add(p);
+				}
+			}
+			Q.clear();
+			Q.addAll(temp);
+		}
+		return res;
+	}
 	
 	public boolean matches(String s) {
 		HashSet<State> actualStates = new HashSet<State>();

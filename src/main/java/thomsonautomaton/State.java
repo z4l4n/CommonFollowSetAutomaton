@@ -34,5 +34,24 @@ public class State {
 	public void addEmptyTransition(State state) {
 		emptyTransitions.add(state);
 	}
+
+	public HashMap<Character, HashSet<State>> getCharTransitions() {
+		return charTransitions;
+	}
+
+	public void setCharTransitions(HashMap<Character, HashSet<State>> charTransitions) {
+		this.charTransitions = charTransitions;
+	}
+
+	public HashSet<State> getEmptyTransitions() {
+		return emptyTransitions;
+	}
+
+	public void setEmptyTransitions(HashSet<State> emptyTransitions) {
+		this.emptyTransitions = emptyTransitions;
+	}
 	
+	
+	
+	// GETTERS, SETTERS
 }

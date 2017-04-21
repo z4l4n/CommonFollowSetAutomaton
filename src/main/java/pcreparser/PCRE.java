@@ -181,7 +181,12 @@ public class PCRE {
 				}
 			}
 			return true;
-
+		case PCRELexer.LITERAL:
+			if (t.getText().charAt(0) == 'ε') {
+				return true;
+			}
+			break;
+			
 		case PCRELexer.ELEMENT:
 			if (t.getChildCount() > 1) {
 				if (t.getChild(1).getChild(0).toString().equals("0")) {
@@ -217,21 +222,26 @@ public class PCRE {
 				}
 			}
 			break;
+			
+		case PCRELexer.LITERAL:	
+			if (t.getText().charAt(0) == 'ε') {
+				break;
+			}
 		case PCRELexer.ELEMENT:
-		case PCRELexer.CAPTURING_GROUP:
+		/*case PCRELexer.CAPTURING_GROUP:
 			calculateLast(t.getChild(0), positionMap, lastMap);
-			break;
+			break;*/
 		case PCRELexer.WordBoundary:
 		case PCRELexer.CHARACTER_CLASS:
 		case PCRELexer.NEGATED_CHARACTER_CLASS:
 		case PCRELexer.WhiteSpace:
-		case PCRELexer.LITERAL:
 		case PCRELexer.ANY:
 		case PCRELexer.NotWhiteSpace:
 		case PCRELexer.DecimalDigit:
 		case PCRELexer.NotDecimalDigit:
 		case PCRELexer.WordChar:
 		case PCRELexer.NotWordChar:
+			
 			lastMap.put(t, positionMap.get(t));
 			break;
 		}
@@ -244,7 +254,7 @@ public class PCRE {
 		return lastMap;
 	}
 
-	public static void calculateFirst(Tree t, HashMap<Tree, Integer> positionMap, HashMap<Tree, Integer> firstMap) {
+	private static void calculateFirst(Tree t, HashMap<Tree, Integer> positionMap, HashMap<Tree, Integer> firstMap) {
 		if (t == null) {
 			return;
 		}
@@ -273,12 +283,16 @@ public class PCRE {
 		case PCRELexer.CAPTURING_GROUP:
 			calculateFirst(t.getChild(0), positionMap, firstMap);
 			break;
+			
+		case PCRELexer.LITERAL:	
+			if (t.getText().charAt(0) == 'ε') {
+				break;
+			}
 		case PCRELexer.WordBoundary:
 		case PCRELexer.NonWordBoundary:
 		case PCRELexer.CHARACTER_CLASS:
 		case PCRELexer.NEGATED_CHARACTER_CLASS:
 		case PCRELexer.WhiteSpace:
-		case PCRELexer.LITERAL:
 		case PCRELexer.ANY:
 		case PCRELexer.NotWhiteSpace:
 		case PCRELexer.DecimalDigit:
@@ -299,6 +313,7 @@ public class PCRE {
 		calculateFirst(t, positionMap, firstMap);
 		return firstMap;
 	}
+	
 	public static HashMap<Tree, Integer> getPositionMap(Tree t) {
 		if (t == null) {
 			System.out.println("null input tree");
@@ -314,6 +329,9 @@ public class PCRE {
 		case PCRELexer.LITERAL:
 			// character class-en belüli literal miatt
 			if (t.getParent().getType() == PCRELexer.CHARACTER_CLASS || t.getParent().getType() == PCRELexer.NEGATED_CHARACTER_CLASS) {
+				break;
+			}
+			if (t.getText().charAt(0) == 'ε') {
 				break;
 			}
 		case PCRELexer.CHARACTER_CLASS:
@@ -426,7 +444,7 @@ public class PCRE {
 		return followMap;
 	}
 	
-		public static Tree next(Tree t) {
+	public static Tree next(Tree t) {
 			if (t.getParent() != null) {
 				Tree father = t.getParent();
 				
@@ -466,13 +484,7 @@ public class PCRE {
 		return result;
 	}
 	
-	public static Tree treeCopier(Tree t) {
-		CommonTree tElem = new CommonTree(new CommonToken(t.getType(), t.getText()));
-		for (int i = 0; i < t.getChildCount(); i++) {
-			tElem.addChild(treeCopier(t.getChild(i)));
-		}
-		return tElem;
-	}
+	
 	
 	/** 
 	 * @param map1 the containing map 
@@ -903,10 +915,27 @@ public class PCRE {
 		 * "usage: java -jar PCRE.jar 'regex-pattern'"); System.exit(42); }
 		 */
 
-		PCRE pcre2 = new PCRE("(a|b)((cd)*|d)*");
+		
+		String regex = "(ε|f)(ε|b)c";
+		PCRE pcre2 = new PCRE(regex);
 		Tree t = getAppropriateTree(pcre2.getCommonTree());
 		//System.out.println(t.toStringTree());
 		ThomsonAutomaton c = new ThomsonAutomaton(t);
-		System.out.println(c.matches("bcddc") ? "matches!" : "doesnt match!");
+		
+		PCRE pcre3 = new PCRE(regex);
+		Tree t2 = getAppropriateTree(pcre3.getCommonTree());
+		//System.out.println(t.toStringTree());
+		CFS c2 = new CFS(t2);
+		// ε empty string
+		System.out.println(t2.toStringTree());
+		System.out.println("Thomson state count: " + c.getStateCount());
+		System.out.println("Thomson transition count: " + c.getTransitionCount());
+		System.out.println("CFS state count: " + c2.getStateCount());
+		System.out.println("CFS transition count: " + c2.getTransitionCount());
+		
+		String inputString = "cd";
+		
+		System.out.println(c.matches(inputString) ? "Thomson matches!" : "Thomson doesnt match!");
+		System.out.println(c2.matches(inputString) ? "CFS matches!" : "CFS doesnt match!");
 	}
 }

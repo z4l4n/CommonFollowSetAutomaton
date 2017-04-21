@@ -1,6 +1,8 @@
 package thomsonautomaton;
 
 import java.util.HashSet;
+import java.util.Map.Entry;
+
 import org.antlr.runtime.tree.Tree;
 import pcreparser.PCRELexer;
 
@@ -16,6 +18,9 @@ public class ThomsonAutomaton {
 		switch(regEx.getType()) {
 		
 		case PCRELexer.LITERAL:
+			if(regEx.getText().charAt(0) == 'ε') {
+				initialState.addEmptyTransition(finalState);
+			}
 			initialState.addTransition(regEx.getText().charAt(0), finalState);
 			break;
 			
@@ -67,7 +72,7 @@ public class ThomsonAutomaton {
 			}
 		}
 	}
-
+	
 	public boolean matches(String s) {
 		HashSet<State> actualStates = new HashSet<State>();
 		HashSet<State> tempStateSet = new HashSet<State>();
@@ -91,6 +96,53 @@ public class ThomsonAutomaton {
 		return false;
 	}
 	
+	public int getTransitionCount() {
+		int res = 0;
+		HashSet<State> S = new HashSet<State>(); //visited
+		HashSet<State> Q = new HashSet<State>();
+		HashSet<State> temp = new HashSet<State>();
+		Q.add(initialState);
+		
+		while (!S.containsAll(Q)) {
+			temp.clear();
+			for (State p : Q) {
+				if (!S.contains(p)) {
+					for (Entry<Character, HashSet<State>> entry : p.getCharTransitions().entrySet()) {
+						res += entry.getValue().size();
+						temp.addAll(entry.getValue());
+					}
+					res += p.getEmptyTransitions().size();
+					temp.addAll(p.getEmptyTransitions());
+					S.add(p);
+				}
+			}
+			Q.clear();
+			Q.addAll(temp);
+		}
+		return res;
+	}
+	
+	public int getStateCount() {
+		HashSet<State> S = new HashSet<State>(); //visited
+		HashSet<State> Q = new HashSet<State>();
+		HashSet<State> temp = new HashSet<State>();
+		Q.add(initialState);
+		while (!S.containsAll(Q)) {
+			temp.clear();
+			for (State p : Q) {
+				if (!S.contains(p)) {
+					for (Entry<Character, HashSet<State>> entry : p.getCharTransitions().entrySet()) {
+						temp.addAll(entry.getValue());
+					}
+					temp.addAll(p.getEmptyTransitions());
+					S.add(p);
+				}
+			}
+			Q.clear();
+			Q.addAll(temp);
+		}
+		return S.size();
+	}
 	
 	
 	

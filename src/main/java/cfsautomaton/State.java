@@ -13,28 +13,28 @@ public class State {
 	
 	private HashMap<Tree, Integer> positions;
 	private boolean isFinal;
-	private HashMap<Character, HashSet<State>> edges;
+	private HashMap<Character, HashSet<State>> charTransitions;
 	
 	public State(HashMap<Tree, Integer> positions, boolean isFinal) {
 		super();
 		this.positions = positions;
 		this.isFinal = isFinal;
-		edges = new HashMap<Character, HashSet<State>>();
+		charTransitions = new HashMap<Character, HashSet<State>>();
 	}
 	
 	
 	public void addEdge(Character character, State state) {
-		if (!edges.containsKey(character)) {
+		if (!charTransitions.containsKey(character)) {
 			HashSet<State> set = new HashSet<State>();
 			set.add(state);
-			edges.put(character, set);
+			charTransitions.put(character, set);
 		} else {
-			edges.get(character).add(state);
+			charTransitions.get(character).add(state);
 		}
 	}
 	
 	public HashSet<State> getNextStates(Character c) {
-		HashSet<State> s = edges.get(c);
+		HashSet<State> s = charTransitions.get(c);
 		return s == null ? new HashSet<State>() : s;
 	}
 	
@@ -54,8 +54,8 @@ public class State {
 		this.isFinal = isFinal;
 	}
 
-	public HashMap<Character, HashSet<State>> getEdges() {
-		return edges;
+	public HashMap<Character, HashSet<State>> getCharTransitions() {
+		return charTransitions;
 	}
 
 
