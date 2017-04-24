@@ -14,6 +14,7 @@ public class ThomsonAutomaton {
 	public ThomsonAutomaton(Tree regEx, State initialState, State finalState) {
 		this.initialState = initialState;
 		this.finalState = finalState;
+		@SuppressWarnings("unused")
 		ThomsonAutomaton subAutomaton1, subAutomaton2;
 		switch(regEx.getType()) {
 		

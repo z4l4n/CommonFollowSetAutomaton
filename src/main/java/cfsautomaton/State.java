@@ -6,8 +6,6 @@ import java.util.Map.Entry;
 
 import org.antlr.runtime.tree.Tree;
 
-import pcreparser.PCRE;
-
 public class State {
 	//
 	
@@ -91,7 +89,7 @@ public class State {
 		if (positions == null) {
 			if (other.positions != null)
 				return false;
-		} else if (!PCRE.areEquals(positions, other.positions))
+		} else if (!CFS.areEqual(positions, other.positions))
 			return false;
 		return true;
 	}
