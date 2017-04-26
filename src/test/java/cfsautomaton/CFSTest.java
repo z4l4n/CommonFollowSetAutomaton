@@ -2,36 +2,28 @@ package cfsautomaton;
 
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
 
 import org.junit.Test;
 import org.antlr.runtime.tree.Tree;
-import org.junit.Before;
-
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-
+import org.junit.Ignore;
 import pcreparser.PCRE;
-import thomsonautomaton.ThomsonAutomaton;
-
-import org.junit.runner.RunWith;
 
 
 public class CFSTest {
 	private PCRE pcre;
 	private CFS cfs;
-	private HashMap<Tree, Integer> positions;
-	private HashMap<Character, Integer> expectedPositions;
 	
-	public static boolean areEqual(HashMap<Tree, Integer> map1, HashMap<Character, Integer>map2) {
+	private HashSet<String> expectedPositions;
+	
+	public static boolean areEqual(HashMap<Tree, Integer> map1, HashSet<String>map2) {
 		if (map1.size() != map2.size()) {
 			return false;
 		}
 		for (Entry<Tree, Integer> e : map1.entrySet()) {
-			if (map2.containsKey(e.getKey().getText().charAt(0)) && map2.get(e.getKey().getText().charAt(0)).equals(e.getValue())) {
+			if (map2.contains(e.getKey().getText().charAt(0) + "=" + e.getValue())) {
 				;
 			} else {
 				return false;
@@ -42,78 +34,270 @@ public class CFSTest {
 	
 	
 	@Test
+	public void testGetPositionMap() {
+
+		pcre = new PCRE("ε");
+		expectedPositions = new HashSet<String>();
+		assertTrue(areEqual(CFS.getPositionMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("εab");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
+		assertTrue(areEqual(CFS.getPositionMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("abεc");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
+		expectedPositions.add("c=2");
+		assertTrue(areEqual(CFS.getPositionMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("abεcεd");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
+		expectedPositions.add("c=2");
+		expectedPositions.add("d=3");
+		assertTrue(areEqual(CFS.getPositionMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("(a|ε)*bcε*d");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
+		expectedPositions.add("c=2");
+		expectedPositions.add("d=3");
+		assertTrue(areEqual(CFS.getPositionMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("aab(c|d)ea");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("a=1");
+		expectedPositions.add("b=2");
+		expectedPositions.add("c=3");
+		expectedPositions.add("d=4");
+		expectedPositions.add("e=5");
+		expectedPositions.add("a=6");
+		assertTrue(areEqual(CFS.getPositionMap(pcre.getAppropriateTree()), expectedPositions));
+	}
+	
+	@Test
+	public void testGetLastMap() {
+		pcre = new PCRE("ε");
+		expectedPositions = new HashSet<String>();
+		assertTrue(areEqual(CFS.getLastMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("g");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("g=0");
+		assertTrue(areEqual(CFS.getLastMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("g|h");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("g=0");
+		expectedPositions.add("h=1");
+		assertTrue(areEqual(CFS.getLastMap(pcre.getAppropriateTree()), expectedPositions));
+		
+
+		pcre = new PCRE("fg");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("g=1");
+		assertTrue(areEqual(CFS.getLastMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("gf|hkj*");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("f=1");
+		expectedPositions.add("k=3");
+		expectedPositions.add("j=4");
+		assertTrue(areEqual(CFS.getLastMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("gfy*|c(ε|hkj)");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("f=1");
+		expectedPositions.add("y=2");
+		expectedPositions.add("c=3");
+		expectedPositions.add("j=6");
+		assertTrue(areEqual(CFS.getLastMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("d(eab*c*)*(f|ε)");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("b=3");
+		expectedPositions.add("a=2");
+		expectedPositions.add("c=4");
+		expectedPositions.add("d=0");
+		expectedPositions.add("f=5");
+		assertTrue(areEqual(CFS.getLastMap(pcre.getAppropriateTree()), expectedPositions));
+	}
+	
+	
+	@Test
 	public void testGetFirstMap() {
 		
-		/*pcre = new PCRE("ε");
-		expectedPositions = new HashMap<Character, Integer>();
+		pcre = new PCRE("ε");
+		expectedPositions = new HashSet<String>();
 		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
-		*/
+		
 		pcre = new PCRE("a");
-		expectedPositions = new HashMap<Character, Integer>();
-		expectedPositions.put('a', 0);
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
 		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
 		
 		pcre = new PCRE("a|b");
-		expectedPositions = new HashMap<Character, Integer>();
-		expectedPositions.put('a', 0);
-		expectedPositions.put('b', 1);
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
 		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
 		
 		pcre = new PCRE("a|b|c");
-		expectedPositions = new HashMap<Character, Integer>();
-		expectedPositions.put('a', 0);
-		expectedPositions.put('b', 1);
-		expectedPositions.put('c', 2);
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
+		expectedPositions.add("c=2");
 		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
 		
 		pcre = new PCRE("ab");
-		expectedPositions = new HashMap<Character, Integer>();
-		expectedPositions.put('a', 0);
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
 		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
 		
 		pcre = new PCRE("a*b");
-		expectedPositions = new HashMap<Character, Integer>();
-		expectedPositions.put('a', 0);
-		expectedPositions.put('b', 1);
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
 		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
 		
-		/*pcre = new PCRE("εb");
-		expectedPositions = new HashMap<Character, Integer>();
-		expectedPositions.put('b', 1);
+		pcre = new PCRE("εb");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("b=0");
 		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
 		
 		pcre = new PCRE("(a|ε)b");
-		expectedPositions = new HashMap<Character, Integer>();
-		expectedPositions.put('a', 0);
-		expectedPositions.put('b', 1);
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
 		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
-		*/
+		
 		pcre = new PCRE("a*");
-		expectedPositions = new HashMap<Character, Integer>();
-		expectedPositions.put('a', 0);
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
 		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
 		
 		pcre = new PCRE("(af)*");
-		expectedPositions = new HashMap<Character, Integer>();
-		expectedPositions.put('a', 0);
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("abc");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("a|b|c|d");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
+		expectedPositions.add("c=2");
+		expectedPositions.add("d=3");
+		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("(a|b)(c|d)");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
+		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("(a|b|c)(c|d)");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
+		expectedPositions.add("c=2");
+		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
+	
+		pcre = new PCRE("ab|cd");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("c=2");
+		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("a*c*");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("c=1");
+		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("a*|c*");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("c=1");
+		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("(a*b|c*d)*ef");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("b=1");
+		expectedPositions.add("c=2");
+		expectedPositions.add("d=3");
+		expectedPositions.add("e=4");
+		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("(f|c|ε|a)gh");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("f=0");
+		expectedPositions.add("c=1");
+		expectedPositions.add("a=2");
+		expectedPositions.add("g=3");
+		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
+		
+		pcre = new PCRE("a*εfh");
+		expectedPositions = new HashSet<String>();
+		expectedPositions.add("a=0");
+		expectedPositions.add("f=1");
 		assertTrue(areEqual(CFS.getFirstMap(pcre.getAppropriateTree()), expectedPositions));
 	}
 	
+	@Test
+	public void testDoesEmptyStringMatch() {
+		
+		pcre = new PCRE("ε");
+		assertTrue(CFS.doesEmptyStringMatch(pcre.getAppropriateTree()));
+		
+		pcre = new PCRE("a|ε");
+		assertTrue(CFS.doesEmptyStringMatch(pcre.getAppropriateTree()));
+		
+		pcre = new PCRE("a*b*");
+		assertTrue(CFS.doesEmptyStringMatch(pcre.getAppropriateTree()));
+		
+		pcre = new PCRE("a*(b|c|ε|d)e*");
+		assertTrue(CFS.doesEmptyStringMatch(pcre.getAppropriateTree()));
+		
+		pcre = new PCRE("a*(b|c*|d)e*");
+		assertTrue(CFS.doesEmptyStringMatch(pcre.getAppropriateTree()));
+		
+		pcre = new PCRE("(a|b)*(f*g)*");
+		assertTrue(CFS.doesEmptyStringMatch(pcre.getAppropriateTree()));
+		
+		pcre = new PCRE("εf*ε(a|ε)");
+		assertTrue(CFS.doesEmptyStringMatch(pcre.getAppropriateTree()));
+		
+		pcre = new PCRE("εf*ε(a|c)d*");
+		assertFalse(CFS.doesEmptyStringMatch(pcre.getAppropriateTree()));
+	}
+	
+	 @Ignore
 	@Test
 	public void testCFS() {
 		fail("Not yet implemented");
 	}
-
+	 @Ignore
 	@Test
 	public void testGetStateCount() {
 		fail("Not yet implemented");
 	}
-
+	 @Ignore
 	@Test
 	public void testGetTransitionCount() {
 		fail("Not yet implemented");
 	}
-	
 	
 	@Test
 	public void testMatch() {
@@ -249,27 +433,27 @@ public class CFSTest {
 		assertFalse(cfs.match("ba"));
 		
 	}
-
+	@Ignore
 	@Test
 	public void testAreEqual() {
 		fail("Not yet implemented");
 	}
-
+	 @Ignore
 	@Test
 	public void testGetStates() {
 		fail("Not yet implemented");
 	}
-
+	 @Ignore
 	@Test
 	public void testSetStates() {
 		fail("Not yet implemented");
 	}
-
+	 @Ignore
 	@Test
 	public void testGetInitialState() {
 		fail("Not yet implemented");
 	}
-
+	 @Ignore
 	@Test
 	public void testGetDecomposition() {
 		fail("Not yet implemented");

@@ -195,8 +195,7 @@ public class PCRE {
 		}
 	}
 	//  Törli az unáris konkatenációkat. Zárójeltörlés után kell meghívni.
-	//  pl: (OR (ALTERNATIVE (ELEMENT a)) (ALTERNATIVE (ELEMENT c) (ELEMENT d))) -ből
-	//  (OR (ELEMENT a)(ALTERNATIVE (ELEMENT c) (ELEMENT d))) lesz
+	// (OR (ALTERNATIVE (ELEMENT a)) (ALTERNATIVE (ELEMENT c) (ELEMENT d)))  ->  (OR (ELEMENT a)(ALTERNATIVE (ELEMENT c) (ELEMENT d))) 
 	private Tree getUnaryConcatFreeTree(Tree t) {
 		// (ALTERNATIVE (ELEMENT (CAPTURING_GROUP (ALTERNATIVE (ELEMENT a))))) alakok ('(a)')  zárójeltelenítésekor
 		//  ALTERNATIVE-nak lehet egy ALTERNATIVE gyereke
@@ -223,7 +222,7 @@ public class PCRE {
 		}
 	}
 
-	// binárissá convertálja az or és concat részfákat
+	// binárissá konvertálja az or és concat részfákat
 	private void convertToBinaryTree(Tree t) { 
 		switch (t.getType()) {
 

@@ -25,7 +25,7 @@ public class CFS {
 		last = getLastMap(t);
 		decomposition = algorithm1(getPositionMap(t), t);
 		first = getFirstMap(t);
-		initialState = new State(first, canBeEmptyString(t));
+		initialState = new State(first, doesEmptyStringMatch(t));
 		states = new HashSet<State>();
 		states.add(initialState);
 
@@ -110,11 +110,11 @@ public class CFS {
 	}
 
 	// parenthesisRemove után lehet csak, mert nem kezeli a zárójeleket
-	public static boolean canBeEmptyString(Tree t) {
+	public static boolean doesEmptyStringMatch(Tree t) {
 		switch (t.getType()) {
 		case PCRELexer.OR:
 			for (int i = 0; i < t.getChildCount(); i++) {
-				if (canBeEmptyString(t.getChild(i))) {
+				if (doesEmptyStringMatch(t.getChild(i))) {
 					return true;
 				}
 			}
@@ -122,7 +122,7 @@ public class CFS {
 
 		case PCRELexer.ALTERNATIVE:
 			for (int i = 0; i < t.getChildCount(); i++) {
-				if (!canBeEmptyString(t.getChild(i))) {
+				if (!doesEmptyStringMatch(t.getChild(i))) {
 					return false;
 				}
 			}
@@ -133,14 +133,19 @@ public class CFS {
 				if (t.getChild(1).getChild(0).toString().equals("0")) {
 					return true;
 				} else {
-					return canBeEmptyString(t.getChild(0));
+					return doesEmptyStringMatch(t.getChild(0));
 				}
 			} 
+		
+		case PCRELexer.LITERAL:
+			if (t.getText().charAt(0) == 'ε') {
+				return true;
+			}
 		}
 		return false;
 	}
 
-	private void calculateLast(Tree t, HashMap<Tree, Integer> positionMap, HashMap<Tree, Integer> lastMap) {
+	public static void calculateLast(Tree t, HashMap<Tree, Integer> positionMap, HashMap<Tree, Integer> lastMap) {
 		if (t == null) {
 			return;
 		}
@@ -154,7 +159,7 @@ public class CFS {
 
 		case PCRELexer.ALTERNATIVE:
 			if (t.getChildCount() > 0) {
-				if (t.getChildCount() > 1 && canBeEmptyString(t.getChild(1))) { //legalabb 2 hosszu alternative, es az utolso lehet ures - > utolso elotti is jatszik
+				if (t.getChildCount() > 1 && doesEmptyStringMatch(t.getChild(1))) { //legalabb 2 hosszu alternative, es az utolso lehet ures - > utolso elotti is jatszik
 					calculateLast(t.getChild(0), positionMap, lastMap);
 					calculateLast(t.getChild(1), positionMap, lastMap);
 					t.addChild(tempTree);
@@ -165,8 +170,7 @@ public class CFS {
 			break;
 
 			/*case PCRELexer.LITERAL:	
-				if (t.getText().charAt(0) == 'ε') {
-					break;
+				
 				}*/
 		case PCRELexer.ELEMENT:
 			calculateLast(t.getChild(0), positionMap, lastMap);
@@ -176,6 +180,9 @@ public class CFS {
 		case PCRELexer.NEGATED_CHARACTER_CLASS:
 		case PCRELexer.WhiteSpace:
 		case PCRELexer.LITERAL:
+			if (t.getText().charAt(0) == 'ε') {
+				break;
+			}
 		case PCRELexer.ANY:
 		case PCRELexer.NotWhiteSpace:
 		case PCRELexer.DecimalDigit:
@@ -188,7 +195,7 @@ public class CFS {
 		}
 	}
 
-	private HashMap<Tree, Integer> getLastMap(Tree t) {
+	public static HashMap<Tree, Integer> getLastMap(Tree t) {
 		HashMap<Tree, Integer> lastMap = new HashMap<Tree, Integer>();
 		HashMap<Tree, Integer> positionMap = getPositionMap(t);
 		calculateLast(t, positionMap, lastMap);
@@ -209,7 +216,7 @@ public class CFS {
 		case PCRELexer.ALTERNATIVE:
 
 			if (t.getChildCount() > 0) {
-				if (t.getChildCount() > 1 && canBeEmptyString(t.getChild(0))) {
+				if (t.getChildCount() > 1 && doesEmptyStringMatch(t.getChild(0))) {
 
 					calculateFirst(t.getChild(0), positionMap, firstMap);
 					calculateFirst(t.getChild(1), positionMap, firstMap); 
@@ -224,11 +231,11 @@ public class CFS {
 			calculateFirst(t.getChild(0), positionMap, firstMap);
 			break;
 
-			/*case PCRELexer.LITERAL:	
+		case PCRELexer.LITERAL:	
 				if (t.getText().charAt(0) == 'ε') {
 					break;
-				}*/
-		case PCRELexer.LITERAL:
+				}
+		
 		case PCRELexer.WordBoundary:
 		case PCRELexer.NonWordBoundary:
 		case PCRELexer.CHARACTER_CLASS:
@@ -272,9 +279,9 @@ public class CFS {
 			if (t.getParent().getType() == PCRELexer.CHARACTER_CLASS || t.getParent().getType() == PCRELexer.NEGATED_CHARACTER_CLASS) {
 				break;
 			}
-			/*if (t.getText().charAt(0) == 'ε') {
+			if (t.getText().charAt(0) == 'ε') {
 					break;
-				}*/
+			}
 		case PCRELexer.CHARACTER_CLASS:
 		case PCRELexer.NEGATED_CHARACTER_CLASS:
 		case PCRELexer.WhiteSpace:

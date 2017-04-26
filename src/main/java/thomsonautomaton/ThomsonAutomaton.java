@@ -21,6 +21,7 @@ public class ThomsonAutomaton {
 		case PCRELexer.LITERAL:
 			if(regEx.getText().charAt(0) == 'ε') {
 				initialState.addEmptyTransition(finalState);
+				break;
 			}
 			initialState.addTransition(regEx.getText().charAt(0), finalState);
 			break;

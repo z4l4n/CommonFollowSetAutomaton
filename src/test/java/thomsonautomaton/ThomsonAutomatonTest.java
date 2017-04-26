@@ -2,24 +2,28 @@ package thomsonautomaton;
 
 import static org.junit.Assert.*;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
-import cfsautomaton.CFS;
 import pcreparser.PCRE;
 
 public class ThomsonAutomatonTest {
 	private PCRE pcre;
 	private ThomsonAutomaton thomson;
+	
+	 @Ignore
 	@Test
 	public void testThomsonAutomatonTreeStateState() {
 		fail("Not yet implemented");
 	}
 
+	 @Ignore
 	@Test
 	public void testThomsonAutomatonTree() {
 		fail("Not yet implemented");
 	}
 
+	 @Ignore
 	@Test
 	public void testGetEmptyTransitionClosure() {
 		fail("Not yet implemented");
@@ -159,31 +163,37 @@ public class ThomsonAutomatonTest {
 		assertFalse(thomson.match("ba"));
 	}
 
+	 @Ignore
 	@Test
 	public void testGetTransitionCount() {
 		fail("Not yet implemented");
 	}
 
+	 @Ignore
 	@Test
 	public void testGetStateCount() {
 		fail("Not yet implemented");
 	}
 
+	 @Ignore
 	@Test
 	public void testGetInitialState() {
 		fail("Not yet implemented");
 	}
 
+	 @Ignore
 	@Test
 	public void testSetInitialState() {
 		fail("Not yet implemented");
 	}
 
+	 @Ignore
 	@Test
 	public void testGetFinalState() {
 		fail("Not yet implemented");
 	}
 
+	 @Ignore
 	@Test
 	public void testSetFinalState() {
 		fail("Not yet implemented");
