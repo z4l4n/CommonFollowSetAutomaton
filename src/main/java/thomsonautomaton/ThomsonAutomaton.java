@@ -74,7 +74,7 @@ public class ThomsonAutomaton {
 		}
 	}
 	
-	public boolean matches(String s) {
+	public boolean match(String s) {
 		HashSet<State> actualStates = new HashSet<State>();
 		HashSet<State> tempStateSet = new HashSet<State>();
 		actualStates.add(initialState);

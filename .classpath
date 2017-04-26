@@ -28,5 +28,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="lib" path="D:/Egyetem/rf2/6/junit-4.4.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

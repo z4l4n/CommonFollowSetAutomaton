@@ -31,8 +31,8 @@ public class Runnable {
 		
 		String inputString = "ab";
 		
-		System.out.println(c.matches(inputString) ? "Thomson matches!" : "Thomson doesnt match!");
-		System.out.println(c2.matches(inputString) ? "CFS matches!" : "CFS doesnt match!");
+		System.out.println(c.match(inputString) ? "Thomson matches!" : "Thomson doesnt match!");
+		System.out.println(c2.match(inputString) ? "CFS matches!" : "CFS doesnt match!");
 		System.out.println("joooo");
 	}
 

@@ -18,7 +18,7 @@ public class CFS {
 	private HashMap<Integer, HashSet<HashMap<Tree, Integer>>> decomposition;
 	private HashMap<Tree, Integer> last;
 	private HashMap<Tree, Integer> first;
-	private int counter = 0;
+	private static int counter = 0;
 
 
 	public CFS(Tree t) {
@@ -87,7 +87,7 @@ public class CFS {
 		return res;
 	}
 
-	public boolean matches(String s) {
+	public boolean match(String s) {
 		HashSet<State> actualStates = new HashSet<State>();
 		HashSet<State> tempStateSet = new HashSet<State>();
 		actualStates.add(initialState);
@@ -110,7 +110,7 @@ public class CFS {
 	}
 
 	// parenthesisRemove után lehet csak, mert nem kezeli a zárójeleket
-	private boolean canBeEmptyString(Tree t) {
+	public static boolean canBeEmptyString(Tree t) {
 		switch (t.getType()) {
 		case PCRELexer.OR:
 			for (int i = 0; i < t.getChildCount(); i++) {
@@ -195,7 +195,7 @@ public class CFS {
 		return lastMap;
 	}
 
-	private void calculateFirst(Tree t, HashMap<Tree, Integer> positionMap, HashMap<Tree, Integer> firstMap) {
+	public static void calculateFirst(Tree t, HashMap<Tree, Integer> positionMap, HashMap<Tree, Integer> firstMap) {
 		if (t == null) {
 			return;
 		}
@@ -245,7 +245,7 @@ public class CFS {
 		}
 	}
 
-	private HashMap<Tree, Integer> getFirstMap(Tree t) {
+	public static HashMap<Tree, Integer> getFirstMap(Tree t) {
 		HashMap<Tree, Integer> firstMap = new HashMap<Tree, Integer>();
 		if (t == null) {
 			return firstMap;
@@ -255,7 +255,7 @@ public class CFS {
 		return firstMap;
 	}
 
-	private HashMap<Tree, Integer> getPositionMap(Tree t) {
+	public static HashMap<Tree, Integer> getPositionMap(Tree t) {
 		if (t == null) {
 			System.out.println("null input tree");
 			return null;
@@ -265,7 +265,7 @@ public class CFS {
 		calculatePositions(t, positionMap);
 		return positionMap;
 	}
-	private void calculatePositions(Tree t, HashMap<Tree, Integer> positionMap) {
+	public static void calculatePositions(Tree t, HashMap<Tree, Integer> positionMap) {
 		switch (t.getType()) {
 		case PCRELexer.LITERAL:
 			// character class-en belüli literal miatt
