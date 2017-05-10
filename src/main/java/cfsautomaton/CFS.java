@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 
 import org.antlr.runtime.tree.BaseTree;
 import org.antlr.runtime.tree.Tree;
+
 import pcreparser.PCRELexer;
 
 // Common Follow Set Automaton
@@ -276,7 +277,7 @@ public class CFS {
 		switch (t.getType()) {
 		case PCRELexer.LITERAL:
 			// character class-en belüli literal miatt
-			if (t.getParent().getType() == PCRELexer.CHARACTER_CLASS || t.getParent().getType() == PCRELexer.NEGATED_CHARACTER_CLASS) {
+			if (t.getParent()!= null &&(t.getParent().getType() == PCRELexer.CHARACTER_CLASS || t.getParent().getType() == PCRELexer.NEGATED_CHARACTER_CLASS)) {
 				break;
 			}
 			if (t.getText().charAt(0) == 'ε') {
@@ -520,8 +521,9 @@ public class CFS {
 		HashMap<Tree, Integer> resultMap = new HashMap<Tree, Integer>();
 
 		for (Tree i : subExprPositions.keySet()) {
-			if (rootPositions.containsKey(i))
+			if (rootPositions.containsKey(i)) {
 				resultMap.put(i, rootPositions.get(i));
+			}
 		}
 		return resultMap;
 	}

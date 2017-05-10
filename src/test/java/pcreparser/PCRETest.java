@@ -1,10 +1,13 @@
 package pcreparser;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
+
 import org.antlr.runtime.tree.CommonTree;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import cfsautomaton.CFS;
 
 public class PCRETest {
 
@@ -112,5 +115,82 @@ public class PCRETest {
 
         pcre = new PCRE("(?<A>aaa)(?'B'bbb)(?P<C>ccc(?<D>ddd))");
         assertThat(pcre.getNamedGroupCount(), is(4));
+    }
+    
+    @Test
+    public void buildRandomRegexTest() {
+    	CommonTree t;
+    	int size;
+    	
+    	
+    	 t = PCRE.buildRandomRegex(0, 0, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size == 0);
+    	 
+    	 t = PCRE.buildRandomRegex(1, 1, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size == 1);
+    	 
+    	 t = PCRE.buildRandomRegex(0, 1, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 0 && size <= 1);
+    	 
+    	 t = PCRE.buildRandomRegex(0, 1, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 0 && size <= 1);
+    	 
+    	 t = PCRE.buildRandomRegex(0, 1, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 0 && size <= 1);
+    	 
+    	 t = PCRE.buildRandomRegex(0, 1, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 0 && size <= 1);
+    	 
+    	 t = PCRE.buildRandomRegex(0, 2, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 0 && size <= 2);
+    	 
+    	 t = PCRE.buildRandomRegex(0, 2, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 0 && size <= 2);
+    	 
+    	 
+    	 t = PCRE.buildRandomRegex(0, 2, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 0 && size <= 2);
+    	 
+    	 t = PCRE.buildRandomRegex(0, 10, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 0 && size <= 10);
+    	 
+    	 t = PCRE.buildRandomRegex(0, 10, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 0 && size <= 10);
+    	 
+    	 t = PCRE.buildRandomRegex(10, 10, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size == 10);
+    	 
+    	 t = PCRE.buildRandomRegex(10, 10, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size == 10);
+    	 
+    	 t = PCRE.buildRandomRegex(10, 10, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size == 10);
+    	 
+    	 t = PCRE.buildRandomRegex(3, 30, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 3 && size <= 30);
+    	 
+    	 t = PCRE.buildRandomRegex(0, 30, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 0 && size <= 30);
+    	 
+    	 t = PCRE.buildRandomRegex(10, 11, true, true);
+    	 size = CFS.getPositionMap(t).size();
+    	 assertTrue(size >= 10 && size <= 11);
+    
     }
 }
