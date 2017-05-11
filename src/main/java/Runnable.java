@@ -13,6 +13,7 @@ public class Runnable {
 		
 		CommonTree t = PCRE.buildRandomRegex(1, 2, true, true);
 		System.out.println(t.toStringTree());
+		System.out.println(PCRE.reparse(t));
 	}
 
 }

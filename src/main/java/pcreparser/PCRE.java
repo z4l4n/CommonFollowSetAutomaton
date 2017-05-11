@@ -816,8 +816,50 @@ public class PCRE {
 		return t;
 	}
 	
+	
+	
+	/*  
+	 * 
+	 * AND: OR fiúnál kell zárójel a fiúra
+	 * KLEENE: 1 méretű childnál nem, különben kell zárójel
+	 */
+	
 	public static String reparse(Tree regexTree) {
-		return "Hi!";
+		StringBuilder res = null;
+		switch (regexTree.getType()) {
+		case PCRELexer.OR:
+			res = new StringBuilder(reparse(regexTree.getChild(0)));
+			res.append('|');
+			res.append(reparse(regexTree.getChild(1)));
+			break;
+			
+		case PCRELexer.ALTERNATIVE:
+			res = new StringBuilder(reparse(regexTree.getChild(0)));
+			if (regexTree.getChild(0).getType() == PCRELexer.OR) {
+				res.insert(0, '(');
+				res.insert(res.length(), ')');
+			}
+			String rightChild = reparse(regexTree.getChild(1));
+			res.append(rightChild);
+			if (regexTree.getChild(1).getType() == PCRELexer.OR) {
+				res.insert(res.length() - rightChild.length(), '(');
+				res.insert(res.length(), ')');
+			}
+			break;
+			
+		case PCRELexer.ELEMENT:
+			res = new StringBuilder(reparse(regexTree.getChild(0)));
+			if (regexTree.getChild(0).getType() != PCRELexer.LITERAL) {
+				res.insert(0, '(');
+				res.insert(res.length(), ')');
+			}
+			res.append('*');
+			break;
+			
+		case PCRELexer.LITERAL:
+			return regexTree.getText();
+			
+		}
+		return res.toString();
 	}
-
 }
