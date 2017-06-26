@@ -15,7 +15,7 @@ import org.antlr.runtime.tree.DOTTreeGenerator;
 import org.antlr.runtime.tree.Tree;
 import org.antlr.stringtemplate.StringTemplate;
 
-import cfsautomaton.CFS;
+import cfsautomaton.CFSAutomaton;
 
 public class PCRE {
 
@@ -211,11 +211,11 @@ public class PCRE {
 			case "OR":
 				result = new CommonTree(new CommonToken(PCRELexer.OR, "OR"));
 				CommonTree leftChild = buildRandomRegex(0, 1, false, true);
-				int leftChildSize = CFS.getPositionMap(leftChild).size();
+				int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 				CommonTree rightChild;
-				while (CFS.doesEmptyStringMatch(leftChild) && leftChildSize == 1) { // a* , a|eps nem lehet egyik oldalon sem 
+				while (CFSAutomaton.doesEmptyStringMatch(leftChild) && leftChildSize == 1) { // a* , a|eps nem lehet egyik oldalon sem 
 					leftChild = buildRandomRegex(0, 1, false, true);
-					leftChildSize = CFS.getPositionMap(leftChild).size();
+					leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 				}
 				if (leftChildSize == 0) {
 					rightChild = buildRandomRegex(1, 1, false, false);
@@ -264,12 +264,12 @@ public class PCRE {
 				CommonTree rightChild;
 				if (mayBeEpsilon) {
 					leftChild = buildRandomRegex(0, maxSize, true, true);
-					int leftChildSize = CFS.getPositionMap(leftChild).size();
-					while (CFS.doesEmptyStringMatch(leftChild) && leftChildSize == maxSize) { // expr* , expr|eps nem lehet egyik oldalon sem, ha |expr| == maxSize 
+					int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
+					while (CFSAutomaton.doesEmptyStringMatch(leftChild) && leftChildSize == maxSize) { // expr* , expr|eps nem lehet egyik oldalon sem, ha |expr| == maxSize 
 						leftChild = buildRandomRegex(0, maxSize, true, true);
-						leftChildSize = CFS.getPositionMap(leftChild).size();
+						leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 					}
-					if (CFS.doesEmptyStringMatch(leftChild)) {
+					if (CFSAutomaton.doesEmptyStringMatch(leftChild)) {
 						if (doesItContainEpsilon(leftChild)) {
 							rightChild = buildRandomRegex(0, maxSize - leftChildSize, false, false);
 						} else {
@@ -283,11 +283,11 @@ public class PCRE {
 				} else {
 					if (mayBeKleene) {
 						leftChild = buildRandomRegex(1, maxSize-1, true, false);
-						int leftChildSize = CFS.getPositionMap(leftChild).size();
+						int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 						rightChild = buildRandomRegex(1, maxSize - leftChildSize, true, false);
 					} else {
 						leftChild = buildRandomRegex(1, maxSize-1, false, false);
-						int leftChildSize = CFS.getPositionMap(leftChild).size();
+						int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 						rightChild = buildRandomRegex(1, maxSize - leftChildSize, false, false);
 					}
 				}
@@ -302,12 +302,12 @@ public class PCRE {
 				result = new CommonTree(new CommonToken(PCRELexer.ALTERNATIVE, "ALTERNATIVE"));
 				if (mayBeEpsilon || mayBeKleene) {
 					leftChild = buildRandomRegex(1, maxSize-1, true, true);
-					int leftChildSize = CFS.getPositionMap(leftChild).size();
+					int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 					rightChild = buildRandomRegex(1, maxSize-leftChildSize, true, true);
 				} else {
 					leftChild = buildRandomRegex(1, maxSize-1, true, true);
-					int leftChildSize = CFS.getPositionMap(leftChild).size();
-					if (CFS.doesEmptyStringMatch(leftChild)) {
+					int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
+					if (CFSAutomaton.doesEmptyStringMatch(leftChild)) {
 						rightChild = buildRandomRegex(1, maxSize-leftChildSize, false, false);
 					} else {
 						rightChild = buildRandomRegex(1, maxSize-leftChildSize, true, true);
@@ -350,11 +350,11 @@ public class PCRE {
 			case "OR":
 				result = new CommonTree(new CommonToken(PCRELexer.OR, "OR"));
 				CommonTree leftChild = buildRandomRegex(0, 1, false, true);
-				int leftChildSize = CFS.getPositionMap(leftChild).size();
+				int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 				CommonTree rightChild;
-				while (CFS.doesEmptyStringMatch(leftChild) && leftChildSize == 1) { // a* , a|ε nem lehet egyik oldalon sem 
+				while (CFSAutomaton.doesEmptyStringMatch(leftChild) && leftChildSize == 1) { // a* , a|ε nem lehet egyik oldalon sem 
 					leftChild = buildRandomRegex(0, 1, false, true);
-					leftChildSize = CFS.getPositionMap(leftChild).size();
+					leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 				}
 				if (leftChildSize == 0) {
 					rightChild = buildRandomRegex(1, 1, false, false);
@@ -399,12 +399,12 @@ public class PCRE {
 				CommonTree rightChild;
 				if (mayBeEpsilon) {
 					leftChild = buildRandomRegex(0, maxSize, true, true);
-					int leftChildSize = CFS.getPositionMap(leftChild).size();
-					while (CFS.doesEmptyStringMatch(leftChild) && leftChildSize == maxSize) { // expr* , expr|eps nem lehet egyik oldalon sem, ha |expr| == maxSize 
+					int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
+					while (CFSAutomaton.doesEmptyStringMatch(leftChild) && leftChildSize == maxSize) { // expr* , expr|eps nem lehet egyik oldalon sem, ha |expr| == maxSize 
 						leftChild = buildRandomRegex(0, maxSize, true, true);
-						leftChildSize = CFS.getPositionMap(leftChild).size();
+						leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 					}
-					if (CFS.doesEmptyStringMatch(leftChild)) {
+					if (CFSAutomaton.doesEmptyStringMatch(leftChild)) {
 						if (doesItContainEpsilon(leftChild)) {
 							rightChild = buildRandomRegex(1, maxSize - leftChildSize, false, false);
 						} else {
@@ -418,11 +418,11 @@ public class PCRE {
 				} else {
 					if (mayBeKleene) {
 						leftChild = buildRandomRegex(1, maxSize-1, true, false);
-						int leftChildSize = CFS.getPositionMap(leftChild).size();
+						int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 						rightChild = buildRandomRegex(1, maxSize - leftChildSize, true, false);
 					} else {
 						leftChild = buildRandomRegex(1, maxSize-1, false, false);
-						int leftChildSize = CFS.getPositionMap(leftChild).size();
+						int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 						rightChild = buildRandomRegex(1, maxSize - leftChildSize, false, false);
 					}
 				}
@@ -437,12 +437,12 @@ public class PCRE {
 				result = new CommonTree(new CommonToken(PCRELexer.ALTERNATIVE, "ALTERNATIVE"));
 				if (mayBeEpsilon || mayBeKleene) {
 					leftChild = buildRandomRegex(1, maxSize-1, true, true);
-					int leftChildSize = CFS.getPositionMap(leftChild).size();
+					int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 					rightChild = buildRandomRegex(1, maxSize-leftChildSize, true, true);
 				} else {
 					leftChild = buildRandomRegex(1, maxSize-1, true, true);
-					int leftChildSize = CFS.getPositionMap(leftChild).size();
-					if (CFS.doesEmptyStringMatch(leftChild)) {
+					int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
+					if (CFSAutomaton.doesEmptyStringMatch(leftChild)) {
 						rightChild = buildRandomRegex(1, maxSize-leftChildSize, false, false);
 					} else {
 						rightChild = buildRandomRegex(1, maxSize-leftChildSize, true, true);
@@ -489,12 +489,12 @@ public class PCRE {
 				CommonTree rightChild;
 				if (mayBeEpsilon) {
 					leftChild = buildRandomRegex(0, maxSize, true, true);
-					int leftChildSize = CFS.getPositionMap(leftChild).size();
-					while (CFS.doesEmptyStringMatch(leftChild) && leftChildSize == maxSize) { // expr* , expr|eps nem lehet egyik oldalon sem, ha |expr| == maxSize 
+					int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
+					while (CFSAutomaton.doesEmptyStringMatch(leftChild) && leftChildSize == maxSize) { // expr* , expr|eps nem lehet egyik oldalon sem, ha |expr| == maxSize 
 						leftChild = buildRandomRegex(0, maxSize, true, true);
-						leftChildSize = CFS.getPositionMap(leftChild).size();
+						leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 					}
-					if (CFS.doesEmptyStringMatch(leftChild)) {
+					if (CFSAutomaton.doesEmptyStringMatch(leftChild)) {
 						if (doesItContainEpsilon(leftChild)) {
 							rightChild = buildRandomRegex((leftChildSize < minSize ? minSize - leftChildSize : 0), maxSize - leftChildSize, false, false);
 						} else {
@@ -508,11 +508,11 @@ public class PCRE {
 				} else {
 					if (mayBeKleene) {
 						leftChild = buildRandomRegex(1, maxSize-1, true, false);
-						int leftChildSize = CFS.getPositionMap(leftChild).size();
+						int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 						rightChild = buildRandomRegex((leftChildSize < minSize ? minSize - leftChildSize : 0), maxSize - leftChildSize, true, false);
 					} else {
 						leftChild = buildRandomRegex(1, maxSize-1, false, false);
-						int leftChildSize = CFS.getPositionMap(leftChild).size();
+						int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 						rightChild = buildRandomRegex((leftChildSize < minSize ? minSize - leftChildSize : 0), maxSize - leftChildSize, false, false);
 					}
 				}
@@ -527,12 +527,12 @@ public class PCRE {
 				result = new CommonTree(new CommonToken(PCRELexer.ALTERNATIVE, "ALTERNATIVE"));
 				if (mayBeEpsilon || mayBeKleene) {
 					leftChild = buildRandomRegex(1, maxSize-1, true, true);
-					int leftChildSize = CFS.getPositionMap(leftChild).size();
+					int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
 					rightChild = buildRandomRegex((leftChildSize < minSize ? minSize - leftChildSize : 0), maxSize-leftChildSize, true, true);
 				} else {
 					leftChild = buildRandomRegex(1, maxSize-1, true, true);
-					int leftChildSize = CFS.getPositionMap(leftChild).size();
-					if (CFS.doesEmptyStringMatch(leftChild)) {
+					int leftChildSize = CFSAutomaton.getPositionMap(leftChild).size();
+					if (CFSAutomaton.doesEmptyStringMatch(leftChild)) {
 						rightChild = buildRandomRegex((leftChildSize < minSize ? minSize - leftChildSize : 0), maxSize-leftChildSize, false, false);
 					} else {
 						rightChild = buildRandomRegex((leftChildSize < minSize ? minSize - leftChildSize : 0), maxSize-leftChildSize, true, true);

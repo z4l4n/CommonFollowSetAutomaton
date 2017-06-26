@@ -1,6 +1,7 @@
 package cfsautomaton;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -11,7 +12,7 @@ import org.antlr.runtime.tree.Tree;
 import pcreparser.PCRELexer;
 
 // Common Follow Set Automaton
-public class CFS {
+public class CFSAutomaton {
 
 	//private HashMap<>
 	private HashSet<State> states;
@@ -22,9 +23,10 @@ public class CFS {
 	private static int counter = 0;
 
 
-	public CFS(Tree t) {
+	public CFSAutomaton(Tree t) {
 		last = getLastMap(t);
 		decomposition = algorithm1(getPositionMap(t), t);
+		//decomposition = refinedAlgorithm(t);
 		first = getFirstMap(t);
 		initialState = new State(first, doesEmptyStringMatch(t));
 		states = new HashSet<State>();
@@ -477,6 +479,21 @@ public class CFS {
 		return result;
 	}
 
+		// részkifejezés poziciókat az egész kifejezéshez viszonyítva alakítja
+		// pl: expr == 'abc', pozíciók: a-0, b-1, c-2
+		// subExpr == bc, pozíciók: b-0, c-1
+		// így getSubTreePositionMap(last(bc), expr) == c-2 lesz c-1 helyett
+	private HashMap<Tree, Integer> getSubTreePositionMap(HashMap<Tree, Integer> exprPositions, HashMap<Tree, Integer> subExprPositions) {
+		HashMap<Tree, Integer> resultMap = new HashMap<Tree, Integer>();
+
+		for (Tree i : subExprPositions.keySet()) {
+			if (exprPositions.containsKey(i)) {
+				resultMap.put(i, exprPositions.get(i));
+			}
+		}
+		return resultMap;
+	}
+	
 	// 1 méretű fára decomposition
 	private HashSet<HashMap<Tree, Integer>> dec1(HashMap<Tree, Integer> rootPositions, Integer position, Tree subExpr) {
 		HashMap<Tree, Integer> subPositions = getSubTreePositionMap(rootPositions, getPositionMap(subExpr));
@@ -512,23 +529,45 @@ public class CFS {
 		resultSet.add(resultMap);
 		return resultSet;
 	}
-
-	// pozíciókat  a root kifejezéshez viszonyítva konvertálja 
-	// pl: ős == 'abc', pozíciók: a-0, b-1, c-2
-	// leszármazott == bc, pozíciók: b-0, c-1
-	// így last(bc) == c-2 lesz c-1 helyett
-	private HashMap<Tree, Integer> getSubTreePositionMap(HashMap<Tree, Integer> rootPositions, HashMap<Tree, Integer> subExprPositions) {
-		HashMap<Tree, Integer> resultMap = new HashMap<Tree, Integer>();
-
-		for (Tree i : subExprPositions.keySet()) {
-			if (rootPositions.containsKey(i)) {
-				resultMap.put(i, rootPositions.get(i));
+	
+	private HashSet<HashMap<Tree, Integer>> dec2(HashMap<Tree, Integer> rootPositions, HashMap<Tree, Integer> subExprPositions, Tree subExpr, Integer position, Tree letter, Tree t1, HashMap<Tree, Integer> t1Positions, HashMap<Tree, Integer> t2Positions, HashMap<Integer, HashSet<HashMap<Tree, Integer>>> t1Dec, HashMap<Integer, HashSet<HashMap<Tree, Integer>>> t2Dec) {
+		if (t1Positions.containsValue(position)) {	
+			HashMap<Tree, Integer> t1Last = getSubTreePositionMap(rootPositions, getLastMap(t1));
+			if (!t1Last.containsValue(position)) {
+				return t1Dec.get(position);
+			} else {
+				HashMap<Tree, Integer> C1 = new HashMap<Tree, Integer>();
+				Tree g = t1;
+				while (g != subExpr) {
+					HashMap<Tree, Integer> gLastMap = getSubTreePositionMap(rootPositions, getLastMap(g));
+					HashMap<Tree, Integer> interSect = getPositionIntersectionMap(gLastMap, t1Positions);
+					if (areEqual(interSect, t1Last)) {
+						C1.putAll(getPositionIntersectionMap(subExprPositions, getSubTreePositionMap(rootPositions, getFirstMap(next(g)))));
+					}
+					g = g.getParent();
+				}
+				HashSet<HashMap<Tree, Integer>> temp = t1Dec.get(position);
+				temp.add(C1);
+				return temp;
 			}
+		} else {
+			if (!t2Positions.containsValue(position)) {
+				System.out.println("bug!");
+			}
+			HashMap<Tree, Integer> t1First = getSubTreePositionMap(rootPositions, getFirstMap(t1));
+			HashSet<HashMap<Tree, Integer>> temp = t2Dec.get(position);
+			if (containsAll(getSubTreePositionMap(rootPositions, getFollowMap(subExpr, letter)), t1First)) {
+				HashMap<Tree, Integer> C2 = getPositionIntersectionMap(subExprPositions, t1First);
+				//System.out.println(C2);
+				temp.add(C2);
+			}
+			return temp;
 		}
-		return resultMap;
 	}
-
-
+	
+	
+		
+/*
 	private HashMap<Integer, HashSet<HashMap<Tree, Integer>>> algorithm1(HashMap<Tree, Integer> rootPositions, Tree subExpr) {
 		HashMap<Integer, HashSet<HashMap<Tree, Integer>>> resultMap = new HashMap<Integer, HashSet<HashMap<Tree, Integer>>>();
 		HashMap<Tree, Integer> subExprPositions = getSubTreePositionMap(rootPositions, getPositionMap(subExpr));
@@ -606,9 +645,204 @@ public class CFS {
 		}
 		System.out.println("err");
 		return null;
+	}*/
+
+	
+	
+	
+	
+	private HashMap<Integer, HashSet<HashMap<Tree, Integer>>> algorithm1(HashMap<Tree, Integer> rootPositions, Tree subExpr) {
+		HashMap<Integer, HashSet<HashMap<Tree, Integer>>> resultMap = new HashMap<Integer, HashSet<HashMap<Tree, Integer>>>();
+		HashMap<Tree, Integer> subExprPositions = getSubTreePositionMap(rootPositions, getPositionMap(subExpr));
+		int subExprSize = subExprPositions.size();
+		if (subExprSize == 1) {
+			int position = -1;
+			for (Entry<Tree, Integer> e : subExprPositions.entrySet()) {
+				position = e.getValue();
+			}
+			resultMap.put(position, dec1(rootPositions, position, subExpr));
+			return resultMap;
+		}
+
+		if (subExprSize > 1) {
+			//System.out.println("size > 1");
+			LinkedList<Tree> s = new LinkedList<Tree>();
+			s.add(subExpr);
+			while (!s.isEmpty()) {
+				Tree t1 = s.removeFirst();
+				int t1Size = getPositionMap(t1).size();
+				if ((subExprSize / 3.0) <= t1Size && t1Size <= (subExprSize * 2 / 3.0)) {
+					int t1Index = t1.getChildIndex();
+					Tree t1Parent = t1.getParent();
+					t1Parent.deleteChild(t1Index);
+					HashMap<Integer, HashSet<HashMap<Tree, Integer>>> t1Dec = algorithm1(rootPositions, t1);
+					HashMap<Integer, HashSet<HashMap<Tree, Integer>>> t2Dec = algorithm1(rootPositions, subExpr);
+					HashMap<Tree, Integer> t1Positions = getSubTreePositionMap(rootPositions, getPositionMap(t1));
+					HashMap<Tree, Integer> t2Positions = getSubTreePositionMap(rootPositions, getPositionMap(subExpr));
+					((BaseTree) t1Parent).insertChild(t1Index, t1);
+					//System.out.println("visszarakás után: " + subExpr.toStringTree());
+					int position;
+					Tree letter;
+					for (Entry<Tree, Integer> entry : subExprPositions.entrySet() ) {
+						position = entry.getValue();
+						letter = entry.getKey();
+						resultMap.put(position, dec2(rootPositions, subExprPositions, subExpr, position, letter, t1, t1Positions, t2Positions, t1Dec, t2Dec));
+					}
+					return resultMap;
+				}
+				for (int i = 0; i < t1.getChildCount(); i++) {
+					s.add(t1.getChild(i));
+				}
+			}
+		}
+		System.out.println("err");
+		return null;
 	}
+	
+	
+	private HashMap<Integer, HashSet<HashMap<Tree, Integer>>> algorithm2(HashMap<Tree, Integer> rootPositions, Tree subExpr, HashMap<Tree, Integer> P) {
+		HashMap<Integer, HashSet<HashMap<Tree, Integer>>> resultMap = new HashMap<Integer, HashSet<HashMap<Tree, Integer>>>();
+		HashMap<Tree, Integer> subExprPositions2 = getSubTreePositionMap(rootPositions, getPositionMap(subExpr));
+		System.out.println("subexpr positions: " + subExprPositions2);
+		System.out.println("P: " + P);
+		
+		HashMap<Tree, Integer> subExprPositions = getPositionIntersectionMap(P,getSubTreePositionMap(rootPositions, getPositionMap(subExpr)));
+		System.out.println("intersection: " + subExprPositions);
+		System.out.println("______________________________________________");
+		int subExprSize = subExprPositions.size();
+		if (subExprSize == 1) { // step 1
+			int position = -1;
+			for (Entry<Tree, Integer> e : subExprPositions.entrySet()) {
+				position = e.getValue();
+			}
+			LinkedList<Tree> s = new LinkedList<Tree>();
+			s.add(subExpr);
+			while (!s.isEmpty()) {
+				Tree t = s.removeFirst();
+				HashMap<Tree, Integer> tpos = getSubTreePositionMap(rootPositions, getPositionMap(t));
+				if (tpos.size() == 1 && tpos.containsValue(position)) {
+					resultMap.put(position, dec1(rootPositions, position, t));
+					return resultMap;
+				}
+				for (int i = 0; i < t.getChildCount(); i++) {
+					s.addLast(t.getChild(i));
+				}
+			}
+		} // end of step 1
 
-
+		if (subExprSize > 1) { // step 2
+			//System.out.println("size > 1");
+			LinkedList<Tree> s = new LinkedList<Tree>();
+			s.add(subExpr);
+			while (!s.isEmpty()) { // step 3
+				
+				Tree t1 = s.removeFirst();
+				
+				//int t1Size = getPositionMap(t1).size();
+				int t1Size = getPositionIntersectionMap(P,getSubTreePositionMap(rootPositions, getPositionMap(t1))).size();
+				System.out.println("t1: " + t1.toStringTree());
+				System.out.println("t1 size: " + t1Size + ", rootSize: " + subExprSize);
+				
+				if ((subExprSize / 3.0) <= t1Size && t1Size <= (subExprSize * 2 / 3.0)) {
+					System.out.println("t1:" + t1.toStringTree());
+					int t1Index = t1.getChildIndex();
+					Tree t1Parent = t1.getParent();
+					t1Parent.deleteChild(t1Index);
+					HashMap<Integer, HashSet<HashMap<Tree, Integer>>> t1Dec = algorithm2(rootPositions, t1, P); //P???
+					HashMap<Integer, HashSet<HashMap<Tree, Integer>>> t2Dec = algorithm2(rootPositions, subExpr, P); //P???
+					HashMap<Tree, Integer> t1Positions = getSubTreePositionMap(rootPositions, getPositionMap(t1));
+					HashMap<Tree, Integer> t2Positions = getSubTreePositionMap(rootPositions, getPositionMap(subExpr));
+					HashMap<Tree, Integer> t1IntersectionPositions = getPositionIntersectionMap(P, t1Positions);
+					HashMap<Tree, Integer> t2InterSectionPositions = getPositionIntersectionMap(P, t2Positions);
+					((BaseTree) t1Parent).insertChild(t1Index, t1);
+					//System.out.println("visszarakás után: " + subExpr.toStringTree());
+					int position;
+					Tree letter;
+					for (Entry<Tree, Integer> entry : subExprPositions.entrySet() ) {
+						position = entry.getValue();
+						letter = entry.getKey();
+						resultMap.put(position, dec2(rootPositions, subExprPositions, subExpr, position, letter, t1, t1Positions, t2Positions, t1Dec, t2Dec));
+					}
+					if (subExprSize == 2 || subExprSize == 3) { // step 7
+						/*if (t1IntersectionPositions.size() == 1 || t2InterSectionPositions.size() == 1) {
+							for (Entry<Integer, HashSet<HashMap<Tree, Integer>>> entry : resultMap.entrySet()) {
+								if (entry.getValue().size() == 2) {
+									HashMap<Tree, Integer> tmp = new HashMap<Tree, Integer>();
+									for (HashMap<Tree, Integer> i : entry.getValue()) {
+										tmp.putAll(i);
+									}
+									HashSet<HashMap<Tree, Integer>> tmp2 = new HashSet<HashMap<Tree, Integer>>();
+									tmp2.add(tmp);
+									entry.setValue(tmp2);
+								}
+							}
+						}*/
+						if (t1IntersectionPositions.size() == 1 || t2InterSectionPositions.size() == 1) {
+						for (Entry<Integer, HashSet<HashMap<Tree, Integer>>> entry : resultMap.entrySet()) {
+							if (entry.getValue().size() == 2 && (t1IntersectionPositions.size() == 1 && t1IntersectionPositions.containsValue(entry.getKey()) || t2InterSectionPositions.size() == 1 && t2InterSectionPositions.containsValue(entry.getKey()))) {
+								HashMap<Tree, Integer> tmp = new HashMap<Tree, Integer>();
+								for (HashMap<Tree, Integer> i : entry.getValue()) {
+									tmp.putAll(i);
+								}
+								HashSet<HashMap<Tree, Integer>> tmp2 = new HashSet<HashMap<Tree, Integer>>();
+								tmp2.add(tmp);
+								entry.setValue(tmp2);
+							}
+						}
+					}
+						
+						
+						
+					} // end of step 7
+					for (Entry<Integer, HashSet<HashMap<Tree, Integer>>> entry : resultMap.entrySet()) { // step 8
+						if (entry.getValue().size() >= 2) {	
+							for (Iterator<HashMap<Tree, Integer>> it = entry.getValue().iterator(); it.hasNext(); ) {
+								if (it.next().isEmpty()) {
+									it.remove();
+								}
+							}
+						}
+					} // end of step 8
+					return resultMap;
+				}
+				for (int i = 0; i < t1.getChildCount(); i++) {
+					s.add(t1.getChild(i));
+				}
+			} // end of step 3.
+		}
+		System.out.println("0 size!");
+		return resultMap;
+	}
+	
+	private HashMap<Integer, HashSet<HashMap<Tree, Integer>>> refinedAlgorithm(Tree regexTree) {
+		HashMap<Tree, Integer> P1 = getLastMap(regexTree);
+		HashMap<Tree, Integer> P0 = getPositionMap(regexTree);
+		HashMap<Tree, Integer> positions = getPositionMap(regexTree);
+		
+		for (Tree t : P1.keySet()) {
+			P0.remove(t);
+		}
+		
+		HashMap<Integer, HashSet<HashMap<Tree, Integer>>> dec0 = algorithm2(positions, regexTree, P0);
+		HashMap<Integer, HashSet<HashMap<Tree, Integer>>> dec1 = algorithm2(positions, regexTree, P1);
+		HashMap<Integer, HashSet<HashMap<Tree, Integer>>> result = new HashMap<Integer, HashSet<HashMap<Tree, Integer>>>();
+		for (Integer pos : positions.values()) {
+			if (P0.containsValue(pos)) {
+				result.put(pos, dec0.get(pos));
+			
+			} else if (P1.containsValue(pos)){
+			
+				result.put(pos, dec1.get(pos));
+			} else {
+				System.out.println("egyik sem tartalmazza");
+			}
+		}
+		System.out.println("dec0: " + dec0);
+		System.out.println("dec1: " + dec1);
+		System.out.println(result);
+		return result;
+	}
+	
 
 
 	// GETTERS, SETTERS

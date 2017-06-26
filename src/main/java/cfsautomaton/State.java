@@ -33,7 +33,7 @@ public class State {
 	
 	public HashSet<State> getNextStates(Character c) {
 		HashSet<State> s = charTransitions.get(c);
-		return s == null ? new HashSet<State>() : s;
+		return (s == null ? new HashSet<State>() : s);
 	}
 	
 	public HashMap<Tree, Integer> getPositions() {
@@ -77,22 +77,29 @@ public class State {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		State other = (State) obj;
-		if (isFinal != other.isFinal)
+		if (isFinal != other.isFinal) {
 			return false;
+		}
 		if (positions == null) {
-			if (other.positions != null)
+			if (other.positions != null) {
 				return false;
-		} else if (!CFS.areEqual(positions, other.positions))
+			}
+		} else if (!CFSAutomaton.areEqual(positions, other.positions)) {
 			return false;
+		}
 		return true;
 	}
+	@Override
 	public String toString() {
 		return "(" + positions + ", " + (isFinal ? "1" : "0") + ")";
 	}
